@@ -1,0 +1,34 @@
+//Write a trigger to update the city field in all the related opportunities when the city field is updated in the Account
+trigger accounttriger on Account (before insert,after insert,before update,after update,before delete) {  
+  if(trigger.isafter && trigger.isupdate){
+        AccounttrigerHandler.updatecity(trigger.new,trigger.oldmap);
+    }
+}
+
+Handler:
+public class AccounttrigerHandler {
+    //Write a trigger to update the city field in all the related opportunities when the city field is
+    //updated in the Account
+    public static void updatecity(list<Account> newlist,map<id,Account> oldmap){
+        try{
+            set<id> accid=new set<id>();
+            for(Account accountobject:newlist){
+                if(accountobject.BillingCity!=null && accountobject.BillingCity!=oldmap.get(accountobject.id).BillingCity){
+                    accid.add(accountobject.id);
+                }
+            }
+            list<Opportunity> updateopp=new list<Opportunity>();
+            list<Opportunity> opplist=[Select id,city__c,AccountId,Account.BillingCity from Opportunity where AccountId =:accid ];
+            for(Opportunity oppobj:opplist){
+                oppobj.city__c=oppobj.Account.BillingCity;
+                updateopp.add(oppobj);
+            }
+            if(updateopp.size()>0){
+                database.update(updateopp);
+            }
+        }
+        catch(exception error){
+            system.debug('error messages'+error.getMessage()+'getLineNumber()'+error.getLineNumber());
+        }
+    }
+}
