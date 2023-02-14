@@ -1,0 +1,19 @@
+// Write a trigger that will prevent adding opportunity related to one account if the amount of opportunity exceeds 100000 per day.
+
+trigger OpportunityTrigger on Opportunity (before insert,before update,after insert,after update,after delete,after undelete) {
+    if(trigger.isbefore && (trigger.isinsert || trigger.isupdate)){
+        OpportunityTriggerHandler.preeventaddopp(trigger.new);
+    }
+}
+Handler:
+public class OpportunityTriggerHandler {
+    //Write a trigger that will prevent adding opportunity related to one account if the amount of
+//opportunity exceeds 100000 per day.
+    public static void preeventaddopp(list<Opportunity> newlist){
+        for(Opportunity oppobj:newlist){
+            if(oppobj.AccountId!=null && oppobj.Amount>100000){
+                system.debug('opportunity can not add to account as amount is greater than 100000');
+            }
+        }
+    } 
+}
