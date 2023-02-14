@@ -1,0 +1,21 @@
+//	Write a trigger that when an account is updated with a new Phone number then its old phone number should be stored in a field name ‘Old Contact Number’.
+
+trigger accounttriger on Account (before insert,after insert,before update,after update,before delete) {    
+if(trigger.isbefore && trigger.isupdate){        
+AccounttrigerHandler.updatephone(trigger.new,trigger.oldmap);
+    }
+}
+
+handler:
+public static void updatephone(list<Account> newlist,map<id,Account> oldmap){
+        try{
+            for(Account accobj:newlist){
+                if(accobj.Phone!=oldmap.get(accobj.id).Phone){
+                    accobj.Old_Contact_Number__c=oldmap.get(accobj.id).Phone; 
+                }
+            }
+        }
+        catch(exception error){
+            system.debug('error messages'+error.getMessage()+'getLineNumber()'+error.getLineNumber());
+        }  	 
+    }
