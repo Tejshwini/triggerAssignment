@@ -1,0 +1,18 @@
+// Create 20 Opportunity with Closed Date, Stage and Opportyunity Name
+ public static void createopp(){
+        list<Opportunity> oppcreate=new list<Opportunity>();
+        for(integer i=0;i<20;i++){
+            Opportunity oppobj=new  Opportunity();
+            oppobj.Name='20Opportunity '+i;
+            oppobj.CloseDate=system.today()+30;
+                oppobj.StageName='Qualification';
+            oppcreate.add(oppobj);
+        }
+        if(oppcreate.size()>0){
+            database.insert(oppcreate,false);
+        }
+    }
+}
+
+
+
