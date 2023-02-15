@@ -1,0 +1,24 @@
+//Create a trigger that when an account is created with industry as ‘Education’ then assign it to the owner/user ‘Of your Own Choice’ 
+Trigger:
+trigger accounttriger on Account (before insert,after insert,before update,after update,before delete) {
+    if(trigger.isbefore && trigger.isinsert){
+       AccounttrigerHandler.assignowner(trigger.new);
+    }
+}
+Handler:
+public class AccounttrigerHandler {
+public static void assignowner(list< Account> newlist){
+        try{
+            user name=[select id, Username from user where Username='john@hicglobalsolutions.com'];
+            for(Account aobj:newlist){
+                if(aobj.Industry!=null && aobj.Industry=='Education'){
+                    aobj.OwnerId=name.id;
+                } 
+            }
+        }
+        catch(exception error){
+            system.debug('error messages'+error.getMessage()+'getLineNumber()'+error.getLineNumber());
+        }
+    }
+}
+
