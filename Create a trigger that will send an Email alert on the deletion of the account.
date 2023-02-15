@@ -1,0 +1,39 @@
+//Create a trigger that will send an Email alert on the deletion of the account.  
+trigger:
+trigger accounttriger on Account (before insert,after insert,before update,after update,before delete) {
+    if(trigger.isbefore && trigger.isdelete){
+        AccounttrigerHandler.sendemailasaccdel(trigger.old); 
+   }
+}
+
+handler:
+ public static void sendemailasaccdel(list<Account> oldlist) {
+        try{
+            list<string> sendemail=new list<string>();
+             list<string> accname=new list<string>();
+            map<id,Account> accountmap=new map<id,Account>();
+            for(Account aobj:oldlist){
+                accname.add(aobj.name);
+                accountmap.put(aobj.id,aobj);
+            }
+            map<id,Contact> contactmap=new map<id,Contact>([select id,Name,email,AccountId from Contact where email!=null AND  AccountId=:accountmap.keySet()]);
+            system.debug('accountmap'+accountmap);
+            system.debug('contactmap'+contactmap);
+             User oemail=[select id,Name,Username,email from user where id=:accountmap.values().OwnerId];
+                sendemail.add(oemail.Email);
+            for(contact cob:contactmap.values()){
+                sendemail.add(cob.email);
+            }
+            system.debug('sendemail'+sendemail);
+            list<messaging.SingleEmailMessage> email=new list<messaging.SingleEmailMessage>();
+            messaging.SingleEmailMessage mail=new messaging.SingleEmailMessage();
+            mail.setToAddresses(sendemail);
+            mail.setSubject('account has deleted');
+            mail.setplaintextbody('account has been deleted of account id of::'+accountmap.keySet()+'number of account deleted'+accname.size()+'Account name ::'+accname+'and related contact details  :: '+contactmap.values());
+            email.add(mail);
+            system.debug('email'+email);
+            messaging.sendEmail(email);
+        }
+        catch(exception error){
+            system.debug('error messages'+error.getMessage()+'getLineNumber()'+error.getLineNumber());
+        }
