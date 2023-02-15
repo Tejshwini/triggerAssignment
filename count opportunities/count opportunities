@@ -1,0 +1,46 @@
+//Write a trigger to display the count of related Opportunities on the Account object.
+trigger:
+trigger OpportunityTrigger on Opportunity (before insert,before update,after insert,after update,after delete,after undelete) {
+    if(trigger.isafter && trigger.isinsert){
+        OpportunityTriggerHandler.countopponacc(trigger.new, null,null);
+    }
+    if(trigger.isafter && trigger.isupdate){
+        OpportunityTriggerHandler.countopponacc(trigger.new, trigger.old, trigger.oldmap);
+    }
+    if(trigger.isafter && trigger.isdelete){
+        OpportunityTriggerHandler.countopponacc(null, trigger.old, trigger.oldmap);
+    }
+    if(trigger.isafter && trigger.isundelete){
+        OpportunityTriggerHandler.countopponacc(trigger.new,null, null);
+    }
+}
+
+handler:
+public class OpportunityTriggerHandler {
+ public static void countopponacc(list<Opportunity> newlist,list<Opportunity> oldlist,map<id,Opportunity> oldmap){
+        set<id> accid=new set<id>();
+        if(newlist!=null){
+            for(Opportunity oppobj:newlist){
+                if(oppobj.AccountId!=null){
+                    accid.add(oppobj.AccountId); 
+                }
+                else if(oppobj.AccountId!=null && oldmap.get(oppobj.Id).AccountId!=oppobj.AccountId){
+                    accid.add(oppobj.AccountId);  
+                }
+            } 
+        }
+        else{
+            for(Opportunity oppobj:oldlist){
+                accid.add(oppobj.AccountId);
+            }
+        }
+        list<Account> accupdate=new list<Account>();
+        for(Account accobj:[Select id,name,count_of_related_Opportunities__c,(Select id,name from Opportunities) from Account where id=:accid]){
+            accobj.count_of_related_Opportunities__c=accobj.Opportunities.size();
+            accupdate.add(accobj);
+        }
+        if(accupdate.size()>0){
+            database.update(accupdate,false);
+        }
+    }
+}
