@@ -1,0 +1,26 @@
+//Write a trigger on the deletion of parent records child records must get deleted. (in lookup relationship).
+trigger:
+trigger leadtrigger on Lead (before delete) {
+    if(trigger.isbefore && trigger.isdelete){
+        leadtriggerHandler.deletechild(trigger.old);
+    }
+}
+handler:
+public class leadtriggerHandler {
+    public static void deletechild(list<Lead> oldlist){
+        try{
+            set<id> idLead=new set<id>();
+            for(Lead ld_list:oldlist){
+                idLead.add(ld_list.id);
+            }
+            list<Lead_servey__c> ldservey=[select id, Name,Lead__c from Lead_servey__c where Lead__c=:idLead];
+            system.debug('ldservey'+ldservey);
+            if(ldservey.size()>0){
+                database.delete(ldservey,false);
+            }
+        }
+        catch(exception error){
+            system.debug('error messages'+error.getMessage()+'error line no'+error.getLineNumber());
+        }
+    }
+}
