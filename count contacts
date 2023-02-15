@@ -1,0 +1,59 @@
+//Write a trigger to display the count of related contacts on the Account object.
+trigger contactTrigger on Contact (before insert,after insert,after update,after delete,after undelete) {
+    if(trigger.isafter && trigger.isinsert){
+      contactTriggerHandler.countcontactonacc(trigger.new, null,null);  
+        system.debug('in after insert');
+    }
+    if(trigger.isafter && trigger.isupdate){
+       contactTriggerHandler.countcontactonacc(trigger.new,trigger.old, trigger.oldmap);  
+        system.debug('after update');
+    }
+    if(trigger.isafter && trigger.isdelete){
+        contactTriggerHandler.countcontactonacc(null,trigger.old, trigger.oldmap); 
+       system.debug('aftet delete');
+    }
+    if(trigger.isafter && trigger.isundelete){
+        contactTriggerHandler.countcontactonacc(trigger.new,null,null); 
+        system.debug('after undlete');
+    }
+}
+
+handler:
+public class contactTriggerHandler {
+    public static void countcontactonacc(list<Contact> newlist,list<Contact> oldlist,map<id,Contact> oldmap){
+        try{
+            set<id> accid=new set<id>();
+            if(newlist!=null){
+                for(Contact cobj:newlist){
+                    if(cobj.AccountId!=null && oldlist==null && oldmap==null){ //on insert and undelete
+                        accid.add(cobj.AccountId);
+                    }
+                    else if(cobj.AccountId!=null  && cobj.AccountId!=oldmap.get(cobj.id).AccountId){// on update
+                        accid.add(cobj.AccountId);
+                        accid.add(oldmap.get(cobj.id).AccountId);
+                    }
+                }
+            }
+            else{
+                for(Contact cobj1:oldlist){
+                    if(cobj1.AccountId!=null  )//on delete
+                        accid.add(cobj1.AccountId);
+                }
+            }
+            list<Account> accupdate=new list<Account>();
+            list<Account> acclist=[select id,name,(Select id,lastname from Contacts) from account where id=:accid];
+            if(acclist.size()>0){
+                for(Account aobj:acclist){
+                    aobj.count_of_related_contacts__c=aobj.Contacts.size();
+                    accupdate.add(aobj);
+                }
+            }
+            if(accupdate.size()>0){
+                database.update(accupdate,false);
+            }
+        }
+        catch(exception error){
+            system.debug('error messages'+error.getMessage()+'getLineNumber()'+error.getLineNumber());
+        }
+    }
+}
